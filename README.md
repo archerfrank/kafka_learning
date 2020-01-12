@@ -101,3 +101,9 @@ https://kafka.apache.org/quickstart
 ![](./imgs/97.png)
 ![](./imgs/98.png)
 ![](./imgs/99.png)
+
+
+## stream app
+
+### windows and time
+https://blog.csdn.net/daydayup_668819/article/details/98593214
