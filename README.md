@@ -105,5 +105,63 @@ https://kafka.apache.org/quickstart
 
 ## stream app
 
+### Streams and state
+
+1. Repartition
+
+First, let’s have a general discussion on how repartitioning works (see figure 4.6). To repartition records, first you may modify or change the key on the original record, and then you write out the record to a new topic. Next, you consume those records again; but as a result of repartitioning, those records may come from different partitions than they were in originally.
+
+Repartitioning in Kafka Streams is easily accomplished by using the KStream.through() method, as illustrated in figure 4.7. The KStream.through() method creates an intermediate topic, and the current KStream instance will start writing records to that topic. A new KStream instance is returned from the through() method call, using the same intermediate topic for its source. This way, the data is seamlessly repartitioned.
+
+2. Failure recovery and fault tolerance
+
+Application failure is inevitable, especially when it comes to distributed applications. We need to shift our focus from preventing failure to recovering quickly from failure, or even from restarts.
+
+
+Backing up a state store with a topic may seem expensive, but there are a couple of mitigating factors at play: a KafkaProducer sends records in batches, and by default, records are cached. It’s only on cache flush that Kafka Streams writes records to the store, so only the latest record for a given key is persisted.
+
+They’re local to the defined processors and don’t share access across processes or threads. State stores also use topics for backup and quick recovery.
+
+There are two additional classes for customizing the state store: the Materialized and StoreBuilder classes. Which one you’ll use depends on how you add the store to the topology. If you use the high-level DSL, you’ll typically use the Materialized class; when you work with the lower-level Processor API, you’ll use the StoreBuilder.
+
+It’s worth noting that all persistent StateStore instances provide local storage using RocksDB (http://rocksdb.org).
+
+suppose you lost a machine running Kafka Streams. Once you recovered your server and restarted your Kafka Streams application, the state stores for that instance would be restored to their original contents (the last committed offset in the changelog before crashing).
+
+
+3. Joining and repartiiton
+
+whenever you invoke a method that could result in generating a new key (selectKey, map, or transform), an internal Boolean flag is set to true, indicating that the new KStream instance requires repartitioning. With this Boolean flag set, if you perform a join, reduce, or aggregation operation, the repartitioning is handled for you automatically.
+
+You supply four parameters to the KStream.join method:
+
+* electronicsStream—The stream of electronic purchases to join with.
+
+* purchaseJoiner—An implementation of the ValueJoiner<V1, V2, R> interface. ValueJoiner accepts two values (not necessarily of the same type). The ValueJoiner.apply method performs the implementation-specific logic and returns a (possibly new) object of type R (maybe a whole new type). In this example, purchaseJoiner will add some relevant information from both Purchase objects, and it will return a CorrelatedPurchase object.
+
+* twentyMinuteWindow—A JoinWindows instance. The JoinWindows.of method specifies a maximum time difference between the two values to be included in the join. In this case, the timestamps must be within 20 minutes of each other.
+
+* A Joined instance—Provides optional parameters for performing joins. In this case, it’s the key and the value Serde for the calling stream, and the value Serde for the secondary stream. You only have one key Serde because, when joining records, keys must be of the same type.
+
+In order to perform a join in Kafka Streams, you need to ensure that all join participants are co-partitioned, meaning that **they have the same number of partitions and are keyed by the same type**. As a result, when you call the join() method in listing 4.13, both KStream instances will be checked to see if a repartition is required.
+
+4. TIMESTAMPS IN KAFKA STREAMS
+
+* Event time—A timestamp set when the event occurred, usually embedded in the object used to represent the event. For our purposes, we’ll consider the timestamp set when the ProducerRecord is created as the event time as well.
+
+* Ingestion time—A timestamp set when the data first enters the data processing pipeline. You can consider the timestamp set by the Kafka broker (assuming a configuration setting of LogAppendTime) to be ingestion time.
+
+* Processing time—A timestamp set when the data or event record first starts to flow through a processing pipeline.
+
+We’ll consider three cases of timestamp-processing semantics:
+
+1. A timestamp embedded in the actual event or message object (event-time semantics)
+2. Using the timestamp set in the record metadata when creating the ProducerRecord (event-time semantics)
+3. Using the current timestamp (current local time) when the Kafka Streams application ingests the record (processing-time semantics)
+
+
+
+
 ### windows and time
 https://blog.csdn.net/daydayup_668819/article/details/98593214
+
