@@ -159,7 +159,60 @@ We’ll consider three cases of timestamp-processing semantics:
 2. Using the timestamp set in the record metadata when creating the ProducerRecord (event-time semantics)
 3. Using the current timestamp (current local time) when the Kafka Streams application ingests the record (processing-time semantics)
 
+### KTable and API
 
+With both a log and a changelog, records are appended to the end of the file as they come in. The distinction between the two is that in a log, you want to see all records, but in a changelog, you only want the latest record for each key.
+
+ In a changelog, each incoming record overwrites the previous one with the same key. With a record stream, you’d have a total of four events, but in the case of updates or a changelog, you have only two.
+
+ The configuration parameters **cache.max.bytes.buffering** and **commit.interval.ms**.
+
+ The KTable cache serves to deduplicate updates to records with the same key. This deduplication allows child nodes to receive only the most recent update instead of all updates, reducing the amount of data processed. Additionally, only the most recent update is placed in the state store, which can amount to significant performance improvements when using persistent state stores.
+
+ A larger cache will reduce the number of updates emitted. Additionally, caching reduces the amount of data written to disk         by persistent stores (RocksDB), and if logging is enabled, the number of records sent to the changelog topic for any store.                  Cache size is controlled by the cache.max.bytes.buffering setting, which specifies the amount of memory allocated for the record cache. The amount of memory specified is divided evenly         across the number of stream threads. 
+
+The other setting is the commit.interval.ms parameter. The commit interval specifies how often (in milliseconds) the state of a processor should be saved. When the state of the processor is saved (committing), it forces a cache flush, sending the latest updated, deduplicated records downstream.
+
+
+Either a commit or the cache reaching its maximum         size will send records downstream. Conversely, disabling the cache will send all records downstream, including duplicate keys.         Generally speaking, it’s best to have caching enabled when using a KTable.
+
+Any time you execute a reduction or aggregation operation, you provide the name of a state store. Reduction and aggregation         operations return a KTable instance, and the KTable uses the state store to replace older results with the newer ones. As you’ve seen, not every update gets forwarded downstream,         and that’s important because you perform aggregation operations to gather summary information. If you didn’t use local state, the KTable would forward every aggregation or reduction result.
+
+#### Windowing operations
+
+In Kafka Streams, three types of windows are available:                                    
+1. Session windows                  
+2. Tumbling windows                  
+3. Sliding/hopping windows
+
+
+1. Session windows aren’t fixed by time but are driven by user activity.                  
+2. Tumbling windows give you a set picture of events within the specified time frame.                  
+3. Hopping windows are of fixed length, but they’re frequently updated and can contain overlapping records in each window.
+
+
+##### join KTable with Stream
+
+To do the KTable-to-KStream conversion, you’ll take the following steps:                                  1. Call the KTable.toStream() method.                           
+2. Use the KStream.map call to change the key to the industry name, and extract the TransactionSummary object from the Windowed instance.
+
+In some cases, the lookup data you want to join against will be relatively small, and entire copies of the lookup data could fit locally on each node. For situations where the lookup data is reasonably small, Kafka Streams provides the **GlobalKTable**.
+
+
+In conclusion, the key thing to remember is that you can combine event streams (KStream) and update streams (KTable), using local state. Additionally, when the lookup data is of a manageable size, you can use a GlobalKTable. GlobalKTables replicate all partitions to each node in the Kafka Streams application, making all data available, regardless of which partition         the key maps to.
+
+#### Queryable state
+
+Kafka Streams also offers interactive queries from state stores, giving you the ability to read these materialized views directly. It’s important to note that querying         state stores is a read-only operation.
+
+Instead of consuming from Kafka and storing records in a database to feed your application, you can directly query the state stores for the same results. The impact of direct queries on state stores means less code (no consumer) and less software (no need for a database table to store results).
+
+
+* KStreams represent event streams that are comparable to inserts into a database. KTables are update streams and are more akin to updates to a database. The size of a KTable doesn’t continue to grow; older records are replaced with newer records.
+* KTables are essential for performing aggregation operations.
+* You can place your aggregated data into time buckets with windowing operations.
+* GlobalKTables give you lookup data across the entire application, regardless of the partitions.
+* You can perform joins with KStreams, KTables, and GlobalKTables.
 
 
 ### windows and time
