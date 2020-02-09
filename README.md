@@ -218,3 +218,16 @@ Instead of consuming from Kafka and storing records in a database to feed your a
 ### windows and time
 https://blog.csdn.net/daydayup_668819/article/details/98593214
 
+
+### Advanced applications with Kafka Streams
+
+1. Integrating outside data into Kafka Streams with Kafka Connect
+
+2. KICKING YOUR DATABASE TO THE CURB
+
+* The idea demonstrated here is simple but powerful. While state stores hold the state of the stream, Kafka Streams provides read-only access from outside the streaming application via a RESTful interface. It’s worth stating again how powerful this concept is; you can view the running state of the stream without the need for an external database.
+
+**Read this article in the web. How to merge distributed local data store.**
+
+To enable interactive queries, you need to set the StreamsConfig.APPLICATION_SERVER_CONFIG parameter. 
+
