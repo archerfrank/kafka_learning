@@ -135,11 +135,11 @@ whenever you invoke a method that could result in generating a new key (selectKe
 
 You supply four parameters to the KStream.join method:
 
-* electronicsStream—The stream of electronic purchases to join with.
+* electronics Stream—The stream of electronic purchases to join with.
 
 * purchaseJoiner—An implementation of the ValueJoiner<V1, V2, R> interface. ValueJoiner accepts two values (not necessarily of the same type). The ValueJoiner.apply method performs the implementation-specific logic and returns a (possibly new) object of type R (maybe a whole new type). In this example, purchaseJoiner will add some relevant information from both Purchase objects, and it will return a CorrelatedPurchase object.
 
-* twentyMinuteWindow—A JoinWindows instance. The JoinWindows.of method specifies a maximum time difference between the two values to be included in the join. In this case, the timestamps must be within 20 minutes of each other.
+* twentyMinuteWindow — A JoinWindows instance. The JoinWindows.of method specifies a maximum time difference between the two values to be included in the join. In this case, the timestamps must be within 20 minutes of each other.
 
 * A Joined instance—Provides optional parameters for performing joins. In this case, it’s the key and the value Serde for the calling stream, and the value Serde for the secondary stream. You only have one key Serde because, when joining records, keys must be of the same type.
 
