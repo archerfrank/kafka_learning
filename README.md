@@ -231,3 +231,15 @@ https://blog.csdn.net/daydayup_668819/article/details/98593214
 
 To enable interactive queries, you need to set the StreamsConfig.APPLICATION_SERVER_CONFIG parameter. 
 
+
+## Kafka performance.
+This is in the Kafka Setup lessons. It is related belew points.
+1. IO, disk to be XFS disk format, and you could mount multiple disks in parallel for kafka.
+2. Network, Latency and bandwidth, put them co located in different AZ.
+3. RAM, don't put all memory to Kafka heap, keep some of them in the OS page cache, this is buffer data for the disk IO. Turn off the swappness.
+4. CPU, cpu usually is not the bottlenect, but it is related to encryption, compression and GC activity.
+5. OS, linux or solaris. Increate the file descriptor, each topic-partition-segment uses 3 file descriptor(log file, index file, timestamp-index file).
+6. Tune the GC implementation, please use Java 8. Set Kafka quotas if someone use too much resource.
+7. In AWS, different AZs, use st1 EBS which is best price /performance ration, mount multipe EBS to machine to scale, use EBS optimized instance, use DNS names instead of IP.
+8.  
+
