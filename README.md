@@ -243,3 +243,7 @@ This is in the Kafka Setup lessons. It is related belew points.
 7. In AWS, different AZs, use st1 EBS which is best price /performance ration, mount multipe EBS to machine to scale, use EBS optimized instance, use DNS names instead of IP.
 8.  
 
+## Capture Date Change
+https://debezium.io/blog/2019/02/19/reliable-microservices-data-exchange-with-the-outbox-pattern/
+https://www.sderosiaux.com/articles/2020/01/06/learnings-from-using-kafka-connect-debezium-postgresql/
+https://strimzi.io/2020/01/27/deploying-debezium-with-kafkaconnector-resource.html
